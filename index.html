@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Una carta para ti</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      background-image: linear-gradient(90deg, #1d1f20, #2f3031, #1d1f20);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    .center {
+      height: 100%;
+      display: grid;
+      place-items: center;
+    }
+
+    /* ====== BOTÓN CENTRAL (círculo oscuro) ====== */
+    div.codepen {
+      position: relative;
+      height: 16em;
+      width: 16em;
+      border-radius: 8em;
+      cursor: pointer;
+      user-select: none;
+      outline: none;
+      background:
+        radial-gradient(120px 120px at 30% 25%, rgba(255,255,255,.08), rgba(255,255,255,0) 60%),
+        radial-gradient(220px 220px at 60% 65%, rgba(255,255,255,.04), rgba(255,255,255,0) 65%),
+        radial-gradient(circle at 50% 50%, #111 0%, #070707 55%, #000 100%);
+      transition: transform 0.12s linear, box-shadow 0.12s linear, filter 0.25s ease;
+      display: grid;
+      place-items: center;
+    }
+
+    div.codepen:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 1em 0.1em rgba(0, 0, 0, 0.75);
+      filter: brightness(1.06);
+    }
+
+    div.codepen:active {
+      transform: scale(0.995);
+    }
+
+    div.codepen:focus-visible {
+      box-shadow: 0 0 0 4px rgba(255,255,255,.18), 0 0 1em 0.1em rgba(0, 0, 0, 0.75);
+    }
+
+    /* ====== GIF (tu imagen) ====== */
+    .gifIcon{
+      width: 68%;
+      height: 68%;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 10px 28px rgba(0,0,0,.35));
+      pointer-events: none;
+      border-radius: 10px;
+    }
+
+    .microcopy{
+      margin-top: 18px;
+      font-size: 12px;
+      opacity: .75;
+      letter-spacing: .2px;
+      text-align: center;
+    }
+
+    /* ====== OVERLAY / CARTA ====== */
+    .overlay{
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: rgba(0,0,0,.55);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .28s ease;
+      padding: 18px;
+    }
+
+    body.open .overlay{
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* ====== SOBRE + HOJA ====== */
+    .card{
+      position: relative;
+      width: min(560px, 94vw);
+      border-radius: 16px;
+      background: #e7e0d6;
+      border: 1px solid rgba(0,0,0,.14);
+      box-shadow: 0 30px 90px rgba(0,0,0,.55);
+      transform: translateY(12px) rotate(-.35deg) scale(.985);
+      transition: transform .34s ease;
+      overflow: visible;
+    }
+
+    body.open .card{
+      transform: translateY(0) rotate(0deg) scale(1);
+    }
+
+    .card::after{
+      content:"";
+      position:absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      height: 56%;
+      border-radius: 14px;
+      background: rgba(0,0,0,.04);
+      clip-path: polygon(0 100%, 50% 46%, 100% 100%, 100% 100%, 0 100%);
+      pointer-events:none;
+    }
+
+    .cardHeader{
+      position: relative;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 12px;
+      padding: 16px 18px 0;
+      background: transparent;
+    }
+
+    .cardHeader::before{
+      content:"";
+      position:absolute;
+      left: 10px;
+      right: 10px;
+      top: 10px;
+      height: 46%;
+      border-radius: 14px;
+      background: rgba(255,255,255,.22);
+      clip-path: polygon(0 0, 100% 0, 50% 100%);
+      transform: translateY(-6px);
+      opacity: .55;
+      pointer-events:none;
+    }
+
+    .hdrLeft{
+      display:flex;
+      flex-direction:column;
+      gap: 2px;
+      min-width: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .title{
+      margin:0;
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(17,17,17,.88);
+      letter-spacing: .2px;
+    }
+
+    .meta{
+      font-size: 12px;
+      color: rgba(17,17,17,.62);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 42ch;
+    }
+
+    .xBtn{
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: rgba(17,17,17,.55);
+      font-size: 22px;
+      line-height: 1;
+      padding: 6px 8px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background .15s ease, color .15s ease;
+      position: relative;
+      z-index: 2;
+    }
+    .xBtn:hover{ background: rgba(0,0,0,.06); color: rgba(17,17,17,.85); }
+
+    .paper{
+      position: relative;
+      margin: 12px 16px 0;
+      border-radius: 12px;
+      background: #f7f3ec;
+      color: #111;
+      padding: 18px 18px 14px;
+      border: 1px solid rgba(0,0,0,.10);
+      box-shadow:
+        0 18px 40px rgba(0,0,0,.18),
+        inset 0 1px 0 rgba(255,255,255,.75);
+      overflow: hidden;
+    }
+
+    .paper::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        repeating-linear-gradient(
+          180deg,
+          rgba(0,0,0,.00) 0px,
+          rgba(0,0,0,.00) 23px,
+          rgba(0,0,0,.045) 24px
+        );
+      opacity: .28;
+      pointer-events:none;
+    }
+
+    .paper::after{
+      content:"";
+      position:absolute;
+      right: 0;
+      top: 0;
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, rgba(0,0,0,.10), rgba(0,0,0,0) 58%);
+      clip-path: polygon(100% 0, 0 0, 100% 100%);
+      opacity: .22;
+      pointer-events:none;
+    }
+
+    .poem{
+      position: relative;
+      z-index: 1;
+      margin:0;
+      font-family: ui-serif, Georgia, "Times New Roman", Times, serif;
+      font-size: 15px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      min-height: 160px;
+    }
+
+    .cursor{
+      display:inline-block;
+      width: 10px;
+      border-bottom: 2px solid rgba(0,0,0,.45);
+      transform: translateY(-2px);
+      animation: blink 1s steps(2,end) infinite;
+    }
+    @keyframes blink{50%{opacity:0}}
+
+    .actions{
+      display:flex;
+      gap: 10px;
+      justify-content: flex-end;
+      padding: 12px 16px 16px;
+      background: transparent;
+      flex-wrap: wrap;
+    }
+
+    .btn{
+      appearance: none;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid rgba(0,0,0,.16);
+      background: rgba(0,0,0,.06);
+      color: rgba(17,17,17,.88);
+      transition: transform .08s ease, background .15s ease;
+    }
+    .btn:hover{ background: rgba(0,0,0,.09); }
+    .btn:active{ transform: scale(.98); }
+
+    .btnPrimary{
+      border-color: rgba(0,0,0,.22);
+      background: rgba(0,0,0,.78);
+      color: #f2f2f2;
+    }
+    .btnPrimary:hover{ background: rgba(0,0,0,.86); }
+
+    @media (prefers-reduced-motion: reduce){
+      div.codepen, .overlay, .card { transition: none !important; }
+      .cursor { animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="center">
+    <div class="codepen" id="openBtn" role="button" tabindex="0" aria-label="Abrir carta">
+      <!-- Pon el GIF en la misma carpeta que este HTML y nómbralo exactamente como aquí -->
+      <img class="gifIcon" src="spongebob.gif" alt="" aria-hidden="true" />
+    </div>
+    <div class="microcopy" id="microcopy">Toca el círculo • o presiona Enter</div>
+  </div>
+
+  <div class="overlay" id="overlay" aria-hidden="true">
+    <div class="card" role="dialog" aria-modal="true" aria-labelledby="cardTitle">
+      <div class="cardHeader">
+        <div class="hdrLeft">
+          <p class="title" id="cardTitle">Carta al amor de mi vida</p>
+          <div class="meta">Para: <span id="para">Mi persona favorita</span> • <span id="fecha">09 de diciembre de 2025</span></div>
+        </div>
+        <button class="xBtn" id="closeBtn" type="button" aria-label="Cerrar">×</button>
+      </div>
+
+      <div class="paper">
+        <p class="poem" id="poem">(Abre la carta…)</p>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="btnReplay" type="button">Releer</button>
+        <button class="btn" id="btnSound" type="button" aria-pressed="true" title="Sonido">Sonido: ON</button>
+        <button class="btn btnPrimary" id="btnClose" type="button">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!--
+    AUDIO:
+    - Pon el MP3 en la misma carpeta que este HTML.
+    - RECOMENDACIÓN: renómbralo a "cancion.mp3" para evitar broncas de espacios en URLs.
+  -->
+  <audio id="song" preload="auto"></audio>
+
+  <script>
+    // =============================
+    // PERSONALIZA AQUÍ 👇
+    // =============================
+    const NOMBRE_DE_TU_NOVIA = "Janitzy Villanueva Meza";
+    const TU_NOMBRE = "Gael Mendoza";
+    const FECHA = "09/10/2025";
+
+    // Música (se apaga SIEMPRE al cerrar carta)
+    // Si no renombras, el nombre con espacios puede fallar en hosting. Mejor "cancion.mp3".
+    const SONG_URL = "cancion.mp3";
+    const SONG_LOOP = true;
+    const SONG_VOLUME = 0.18;
+    const SONG_FADE_MS = 600;
+
+    const POEMA = `Desde que te vi, yo era un hombre en guerra:
+    sin rumbo, con miedo, y el caos por dentro.
+
+    Pero tus ojos café—tu olor, tu piel—
+    encendieron luz donde solo había noche:
+    un lucero en mar negro.
+
+    Yo era una coraza sin alma, aislado por el mundo,
+    y tú me devolviste lo humano.
+
+    Gracias por volver poeta
+    a este hombre triste:
+    hoy admiro la vida,
+    la calma de la muerte,
+    y la paz del caos contigo.
+
+    — ${TU_NOMBRE}`;
+
+    // =============================
+    // LÓGICA
+    // =============================
+    const openBtn   = document.getElementById('openBtn');
+    const overlay   = document.getElementById('overlay');
+    const closeBtn  = document.getElementById('closeBtn');
+    const btnClose  = document.getElementById('btnClose');
+    const btnReplay = document.getElementById('btnReplay');
+    const btnSound  = document.getElementById('btnSound');
+    const microcopy = document.getElementById('microcopy');
+
+    const poemEl  = document.getElementById('poem');
+    const paraEl  = document.getElementById('para');
+    const fechaEl = document.getElementById('fecha');
+
+    const song = document.getElementById('song');
+
+    paraEl.textContent = NOMBRE_DE_TU_NOVIA;
+    fechaEl.textContent = FECHA;
+
+    song.src = SONG_URL;
+    song.loop = SONG_LOOP;
+    song.volume = 0;
+
+    let typingTimer = null;
+    let fadeTimer = null;
+    let soundEnabled = true;
+
+    function typeText(el, text, speed=18){
+      clearInterval(typingTimer);
+      el.textContent = "";
+      const cursor = document.createElement('span');
+      cursor.className = 'cursor';
+      el.appendChild(cursor);
+
+      let i = 0;
+      typingTimer = setInterval(() => {
+        if(i >= text.length){
+          clearInterval(typingTimer);
+          cursor.remove();
+          return;
+        }
+        cursor.insertAdjacentText('beforebegin', text[i]);
+        i++;
+      }, speed);
+    }
+
+    function clamp(n, min, max){
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function fadeTo(targetVol, ms){
+      clearInterval(fadeTimer);
+      const start = song.volume;
+      const diff = targetVol - start;
+      const steps = Math.max(8, Math.floor(ms / 30));
+      let i = 0;
+      fadeTimer = setInterval(() => {
+        i++;
+        const t = i / steps;
+        song.volume = clamp(start + diff * t, 0, 1);
+        if(i >= steps){
+          clearInterval(fadeTimer);
+          song.volume = clamp(targetVol, 0, 1);
+        }
+      }, 30);
+    }
+
+    async function startSong(){
+      if(!soundEnabled) return;
+      try{
+        if(!song.paused) return;
+        await song.play();
+        fadeTo(SONG_VOLUME, SONG_FADE_MS);
+      } catch (err){
+        console.warn('No se pudo iniciar audio:', err);
+        microcopy.textContent = 'Tip: si no suena, toca otra vez el círculo (autoplay bloqueado)';
+      }
+    }
+
+    function stopSong(){
+      clearInterval(fadeTimer);
+      const wasPlaying = !song.paused;
+      fadeTo(0, SONG_FADE_MS);
+      if(wasPlaying){
+        setTimeout(() => {
+          song.pause();
+          song.currentTime = 0;
+        }, SONG_FADE_MS + 40);
+      } else {
+        song.currentTime = 0;
+      }
+    }
+
+    function setSound(on){
+      soundEnabled = on;
+      btnSound.setAttribute('aria-pressed', String(on));
+      btnSound.textContent = on ? 'Sonido: ON' : 'Sonido: OFF';
+      if(!on) stopSong();
+    }
+
+    function openLetter(){
+      if(document.body.classList.contains('open')) return;
+      document.body.classList.add('open');
+      overlay.setAttribute('aria-hidden', 'false');
+      microcopy.textContent = 'Toca el círculo • o presiona Enter';
+
+      startSong();
+      setTimeout(() => typeText(poemEl, POEMA, 14), 140);
+      setTimeout(() => closeBtn.focus(), 220);
+    }
+
+    function closeLetter(){
+      if(!document.body.classList.contains('open')) return;
+      document.body.classList.remove('open');
+      overlay.setAttribute('aria-hidden', 'true');
+      clearInterval(typingTimer);
+      poemEl.textContent = "(Abre la carta…)";
+      // Requisito: la música SIEMPRE se cierra al cerrar carta
+      stopSong();
+      openBtn.focus();
+    }
+
+    function replay(){
+      if(!document.body.classList.contains('open')) return;
+      typeText(poemEl, POEMA, 14);
+      if(soundEnabled) startSong();
+    }
+
+    // Click / teclado
+    openBtn.addEventListener('click', openLetter);
+    openBtn.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openLetter();
+      }
+    });
+
+    closeBtn.addEventListener('click', closeLetter);
+    btnClose.addEventListener('click', closeLetter);
+
+    overlay.addEventListener('click', (e) => {
+      if(e.target === overlay) closeLetter();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape') closeLetter();
+    });
+
+    btnReplay.addEventListener('click', (e) => {
+      e.stopPropagation();
+      replay();
+    });
+
+    btnSound.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setSound(!soundEnabled);
+      if(soundEnabled && document.body.classList.contains('open')) startSong();
+    });
+
+    // =============================
+    // TESTS (no afectan la UI)
+    // =============================
+    (function runTests(){
+      try{
+        console.assert(typeof POEMA === 'string', 'TEST: POEMA debe ser string');
+        console.assert(POEMA.length > 0, 'TEST: POEMA no debe estar vacío');
+        console.assert(openBtn instanceof HTMLElement, 'TEST: openBtn existe');
+        console.assert(overlay instanceof HTMLElement, 'TEST: overlay existe');
+        console.assert(poemEl instanceof HTMLElement, 'TEST: poemEl existe');
+        console.assert(document.querySelector('.gifIcon') instanceof HTMLImageElement, 'TEST: gifIcon existe');
+        console.assert(song instanceof HTMLAudioElement, 'TEST: song existe (audio tag)');
+        console.assert(typeof song.play === 'function', 'TEST: song.play existe');
+        console.assert(typeof song.pause === 'function', 'TEST: song.pause existe');
+      } catch (err){
+        console.error('Tests fallaron:', err);
+      }
+    })();
+  </script>
+</body>
+</html>
